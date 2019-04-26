@@ -1,0 +1,76 @@
+---
+# tasks file for tamay.wildfly
+
+- name: "Create wildfly group"
+  group:
+    name: wildfly
+    system: yes
+
+- name: "Create wildfly user"
+  user:
+    name: wildfly
+    shell: /sbin/nologin
+    home: /opt/wildfly
+    system: yes
+    group: wildfly
+
+- name: "Install openjdk"
+  package:
+    state: present
+    name: java-11-openjdk-headless.x86_64
+
+- name: "Create /root/packages"
+  file:
+    state: directory
+    path: /root/packages
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Download wildfly {{ wildfly_version }}"
+  unarchive:
+    src: "{{ wildfly_download_url }}"
+    remote_src: yes
+    dest: /opt/wildfly
+    owner: wildfly
+    group: wildfly
+    creates: /opt/wildfly/wildfly-{{ wildfly_version }}/README.txt
+
+- name: "Create /etc/wildfly"
+  file:
+    state: directory
+    path: /etc/wildfly
+    owner: root
+    group: root
+    mode: 0755
+
+- name: "Copy wildfly.conf to /etc/wildfly"
+  template:
+    src: wildfly.conf.j2
+    dest: /etc/wildfly/wildfly.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Copy wildfly.service to /etc/systemd/system/"
+  template:
+    src: wildfly.service.j2
+    dest: /etc/systemd/system/wildfly.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: daemon_reload
+
+- name: "Copy launch.sh to /opt/wildfly/{{ wildfly_version }}/bin/"
+  template:
+    src: launch.sh.j2
+    dest: /opt/wildfly/wildfly-{{ wildfly_version }}/bin/launch.sh
+    owner: wildfly
+    group: wildfly
+    mode: 0750
+
+- name: "Start and enable wildfly"
+  service:
+    name: wildfly
+    state: started
+    enabled: yes

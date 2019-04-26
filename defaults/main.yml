@@ -1,0 +1,8 @@
+---
+# defaults file for tamay.wildfly
+
+# Version as listed in https://wildfly.org/downloads/
+wildfly_version: 16.0.0.Final
+
+# Mode to run (standalone or domain)
+wildfly_mode: standalone
